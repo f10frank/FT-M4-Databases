@@ -8,6 +8,56 @@ server.use(express.json());
 
 server.use(morgan('dev'));
 
+// Tetsing demo
+server.post("/prueba1", async (req, res) => {
+  const {team} = req.body;
+  try {
+    // Con Async 
+    //const aux = await Team.create(team); 
+    //res.json(aux);
+
+    // Con Promesas
+    Team.create(team).then((data) => res.json(data));
+  } catch (error) {
+    console.log(error);
+  }
+})
+
+server.get("/allplayers", async (req, res) => {
+  const {id} = req.query;
+  try {
+    const pedidoBd = await Player.findByPk(id, {
+      attributes: {exclude: ["birthday", "actualizado"]},
+    });
+    if(pedidoBd) res.json({msg: "aqui esta", player: pedidoBd});
+    else res.status(404).json({msg: "Not found"});
+  } catch (error) {
+    console.log(error);
+  }
+});
+
+server.get("/orcreated", async (req, res) => {
+  try {
+    const [instance, created] = await Player.findOrCreate({
+      where:{lastName: "Gutierrez"},
+      defaults: {
+        skill: 50,
+        firstName: "Jose Maria",
+        lastName: "Gutierrez",
+        username: "GUTI",
+        birthday: "1968-07-15",
+        status: "active",
+        password: "1234dde5"
+    }
+    });
+    res.json({msg: "aqui esta", player: instance, status: created});
+  } catch (error) {
+    console.log(error);
+  }
+});
+
+// End testing
+
 server.post('/players', async (req, res) => {
   const { firstName, lastName, username, birthday, status, skill, password } = req.body;
   try {
@@ -289,6 +339,7 @@ server.use('/', (req, res) => {
 });
 
 server.listen(3000, () => {
+  console.log("Se sincronizaron los modelos")
   console.log('Server running on port 3000');
   db.sync();
 });
